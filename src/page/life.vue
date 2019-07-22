@@ -19,10 +19,12 @@
         </div>
       </div>
       <ul class="sidebar-list">
-        <li v-for="(item,index) in pathList" :class="{'on':currentPath.path_id == item.path_id}" @click="selectPath(item)">
-          <p class="path-title">{{item.path_title}}
-            <i class="iconfont icon-ok">&#xe63d;</i>
-            <i class="iconfont icon-delete" @click="popDeleteModal">&#xe656;</i>
+        <li v-for="(item,index) in pathList" :class="{'on':currentPath.path_id == item.path_id,'hurry':item.is_hurry}" @click="selectPath(item)">
+          <p class="path-title">
+            <i class="iconfont icon-hurry">&#xe620;</i>
+            <span>{{item.path_title}}</span>
+            <i class="iconfont icon-edit" @click="popEditPathModal">&#xe661;</i>
+            <i class="iconfont icon-delete" @click="popDeletePathModal">&#xe656;</i>
           </p>
         </li>
         <li ref="new_path_pop_el" class="new-path" data-toggle="modal" data-target="#new_path_pop">
@@ -36,7 +38,14 @@
         <div class="col-md-6 align-left">
           <span class="wrap-title">规划版图</span>
           <span class="nav-title" v-if="currentPath != ''">【 {{currentPath.path_title}} 】</span>
-          <span class="glyphicon glyphicon-cog"></span>
+          <div class="hurry-box" :class="{'hurry': currentPath.is_hurry}" v-if="currentPath != ''">
+            <span class="common" @click="setPathStatus(0)">常</span>
+            <span class="hurry" @click="setPathStatus(1)">急</span>
+          </div>
+          <div class="opt-box">
+            <span class="glyphicon glyphicon-cog"></span>
+            <span class="opt-font">设置</span>
+          </div>
         </div>
         <div class="col-md-6 align-right">
           <span class="glyphicon glyphicon-question-sign"></span>
@@ -63,11 +72,13 @@
     </div>
 
     <button ref="goal_pop_el" class="goalPopLink" data-toggle="modal" data-target="#goal_detail_option_pop"></button>
+    <button ref="path_pop_el" class="pathPopLink" data-toggle="modal" data-target="#path_pop"></button>
     <button ref="new_goal_pop_el" class="goalPopLink" data-toggle="modal" data-target="#new_goal_pop"></button>
     <button ref="delete_goal_pop_el" class="goalPopLink" data-toggle="modal" data-target="#delete_goal_pop"></button>
     <button ref="delete_path_pop_el" class="goalPopLink" data-toggle="modal" data-target="#delete_path_pop"></button>
 
     <goal-pop :current-goal="currentGoal" @changeGoalStatus="changeGoalStatus" v-if="isGoalPop"></goal-pop>
+    <path-pop :current-path="currentPath" @handleUpdatePath="handleUpdatePath"></path-pop>
     <new-goal-pop @handleNewGoal="handleNewGoal" :path="currentPath"></new-goal-pop>
     <new-path-pop @handleNewPath="handleNewPath"></new-path-pop>
     <div 
@@ -78,12 +89,16 @@
     aria-labelledby="删除">
       <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">确认删除该目标？</h4>
+          </div>
           <div class="modal-body">
-            <h3>确认删除该目标？</h3>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary"  @click="deleteGoal">删除</button>
-            </div>
+          
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary"  @click="deleteGoal">删除</button>
           </div>
         </div>
       </div>
@@ -96,17 +111,20 @@
     aria-labelledby="删除">
       <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">确认删除该路线？</h4>
+          </div>
           <div class="modal-body">
-            <h3>确认删除该路线？</h3>
             <div class="modal-panel" v-if="checkGoals()">
               <p>检测到您在该路线内含有目标任务</p>
               <p>请先将其全部清除，再进行路线删除</p>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary disabled" v-if="checkGoals()">删除</button>
-              <button type="button" class="btn btn-primary" v-else @click="deletePath">删除</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary disabled" v-if="checkGoals()">删除</button>
+            <button type="button" class="btn btn-primary" v-else @click="deletePath">删除</button>
           </div>
         </div>
       </div>
@@ -116,6 +134,7 @@
 
 <script>
   import GoalPop from '../components/life/goalPop.vue'
+  import PathPop from '../components/life/pathPop.vue'
   import NewGoalPop from '../components/life/newGoalPop.vue'
   import NewPathPop from '../components/life/newPathPop.vue'
   import calendar from '../components/life/calendar.vue'
@@ -148,38 +167,75 @@
         'currentPath': '',
         'pathTypeList': [
           {
-            'type_title': '全部计划'
+            'type_title': '全部计划',
+            'type': 'all'
           },
           {
-            'type_title': '特殊规划'
+            'type_title': '紧急规划',
+            'type': 'hurry'
           }
         ],
         'currentType': '',
         'goalsList': [],
         'currentGoal': {},
         'isGoalPop': false,
-        'isNewGoalPop': false,
-        'isDeletePop': false
       }
     },
     mounted: function(){
       this.currentType = this.pathTypeList[0]
       this.getUserPaths()
     },
-    methods: {
-      checkGoals: function(){
-        if(this.goalsList === undefined || this.goalsList.length == 0){
-          return false
+    watch: {
+      'currentType': function(){
+        if(this.currentType.type == 'all'){
+          this.getUserPaths()
         }
-        else {
-          return true
-        } 
+        else if(this.currentType.type == 'hurry'){
+          this.getUserHurryPaths()
+        }
+      }
+    },
+    methods: {
+      setPathStatus: function(flag){
+        this.currentPath.is_hurry = flag
+        this.updatePath()
+      },
+      updatePath: function(){
+        this.$store.dispatch('path/UpdatePath',this.currentPath).then((res) => {
+          console.log("编辑后的路线信息已被存储：")
+          console.log(res.data)
+          if(this.currentType.type == 'all'){
+            this.getUserPaths()
+          }
+          else if(this.currentType.type == 'hurry'){
+            this.getUserHurryPaths()
+          }
+        }).catch((e) => {
+          console.log("error:" + e)
+        })
       },
       getUserPaths: function(){
         var _this = this
         this.$store.dispatch('path/GetUserPaths').then((res) => {
+          // console.log("获取用户所有路线：")
           // console.log(res.data)
           this.pathList = res.data.data
+          // this.currentPath = this.pathList[0]
+          if(this.currentPath != ''){
+            this.getPathGoals(this.currentPath.path_id)
+          }
+        }).catch((e) => {
+          console.log("error:" + e)
+        })
+      },
+      getUserHurryPaths: function(){
+        var _this = this
+        this.$store.dispatch('path/GetUserHurryPaths').then((res) => {
+          // console.log(res.data)
+          this.pathList = res.data.data
+          if(!this.currentPath.is_hurry){
+            this.currentPath = this.pathList[0]
+          }
           // this.currentPath = this.pathList[0]
           this.getPathGoals(this.currentPath.path_id)
         }).catch((e) => {
@@ -188,7 +244,8 @@
       },
       getPathGoals: function(path_id){
         this.$store.dispatch('goal/GetPathGoals',path_id).then((res) => {
-          // console.log(res.data)
+          console.log("获取路线 " + this.currentPath.path_title + " 下的所有目标：")
+          console.log(res.data)
           if(res.data.data === undefined || res.data.data.length == 0){
             this.goalsList = []
           }
@@ -201,12 +258,23 @@
         this.currentPath = item
         this.getPathGoals(item.path_id)
       },
-      popDeleteModal: function(){
+      popEditPathModal: function(){
+        this.$refs.path_pop_el.click()
+      },
+      handleUpdatePath: function(path){
+        this.currentPath.path_title = path.path_title
+        this.currentPath.path_detail = path.path_detail
+        this.currentPath.is_hurry = path.is_hurry
+        this.updatePath()
+        this.$refs.path_pop_el.click()
+      },
+      popDeletePathModal: function(){
         this.$refs.delete_path_pop_el.click()
       },
       deletePath: function(){
         this.$store.dispatch('path/DeletePath',this.currentPath.path_id).then((res) => {
-          // console.log(res.data)
+          console.log("路线 " + this.currentPath.path_title + " 已被删除。")
+          console.log(res.data)
           this.selectPath(this.pathList[0])
           this.$refs.delete_path_pop_el.click()
           this.getUserPaths()
@@ -243,8 +311,18 @@
           this.currentGoal = item
         })
       },
+      checkGoals: function(){
+        if(this.goalsList === undefined || this.goalsList.length == 0){
+          return false
+        }
+        else {
+          return true
+        } 
+      },
       deleteGoal: function(){
         this.$store.dispatch('goal/DeleteGoal',this.currentGoal.goal_id).then((res) => {
+          console.log(this.currentGoal.goal_title + " 目标已被删除。")
+          console.log(res.data)
           this.getPathGoals(this.currentGoal.path.path_id)
           this.$refs.delete_goal_pop_el.click()
         }).catch((e) => {
@@ -255,12 +333,14 @@
         this.currentGoal = item
         this.currentGoal.is_achieve = flag
         if(flag){
-          this.currentGoal.achieve_time = this.DateFormate(new Date())
+          this.currentGoal.achieve_time = this.datetime.DateFormate(new Date())
         }
         this.updateGoal()
       },
       updateGoal: function(){
         this.$store.dispatch('goal/UpdateGoal',this.currentGoal).then((res) => {
+          console.log("目标状态已更新：")
+          console.log(res.data)
           this.getPathGoals(this.currentGoal.path.path_id)
         }).catch((e) => {
           console.log("error:" + e)
@@ -270,10 +350,11 @@
     components: {
       calendar,
       GoalPop,
+      PathPop,
       NewGoalPop,
       NewPathPop
     }
-  }
+  };
 </script>
 
 <style>
@@ -375,12 +456,15 @@
     color: #f0f0f0;
     /*box-shadow: 1px 1px 3px 0px #c3c3c3;*/
     border-radius: 2px;
-    cursor: pointer;
+    /*cursor: pointer;*/
     transition: all 0.2s;
     -moz-transition: all 0.2s; /* Firefox 4 */
     -webkit-transition: all 0.2s; /* Safari 和 Chrome */
     -o-transition: all 0.2s; /* Opera */
     margin-top: 8px;
+  }
+  #life .sidebar-wrap .sidebar-list li *{
+    user-select: none;
   }
   #life .sidebar-wrap .sidebar-list li:hover{
     background: rgba(176, 176, 176, 0.8);
@@ -401,19 +485,26 @@
     text-align: left;
     font-weight: 600;
   }
-  #life .sidebar-wrap .sidebar-list li i.icon-ok{
+  #life .sidebar-wrap .sidebar-list li p span{
+    max-width: 78%;
+    height: 35px;
+    line-height: 35px;
+    vertical-align: middle;
+    display: inline-block;
+  }
+  #life .sidebar-wrap .sidebar-list li i.icon-hurry{
     position: absolute;
     display: none;
-    font-size: 20px;
-    color: #fff;
+    font-size: 16px;
     /*right: 14px;*/
     left: 15px;
+    top: -1px;
   }
-  #life .sidebar-wrap .sidebar-list li.on i.icon-ok{
-    display: inline-block;
-    color: #6c6c6c;
+  #life .sidebar-wrap .sidebar-list li.hurry i.icon-hurry{
+    display: block;
   }
-  #life .sidebar-wrap .sidebar-list li .icon-delete{
+  #life .sidebar-wrap .sidebar-list li .icon-delete,
+  #life .sidebar-wrap .sidebar-list li .icon-edit{
     font-size: 18px;
     width: 18px;
     height: 20px;
@@ -421,15 +512,23 @@
     display: none;
     position: absolute;
     right: 10px;
+    cursor: pointer;
     top: 24px;
   }
-  #life .sidebar-wrap .sidebar-list li p:hover>.icon-delete{
+  #life .sidebar-wrap .sidebar-list li .icon-edit{
+    right: 34px;
+    font-size: 17px;
+    top: 25px;
+  }
+  #life .sidebar-wrap .sidebar-list li:hover> p .icon-delete,
+  #life .sidebar-wrap .sidebar-list li:hover> p .icon-edit{
     display: block;
   }
   #life .sidebar-wrap .sidebar-list li.new-path{
     background: transparent;
     color: #f4f4f4;
     box-shadow: none;
+    cursor: pointer;
   }
   #life .sidebar-wrap .sidebar-list li.new-path:hover{
     color: #fff;
@@ -448,11 +547,12 @@
     line-height: 40px;
     display: inline-block;
     position: relative;
-    top: 2px;
+    top: 5px;
   }
   #life .sidebar-wrap .sidebar-list li.new-path p.path-title{
     font-size: 12px;
     font-weight: 400;
+    line-height: 35px;
   }
 
 
@@ -480,6 +580,9 @@
     color: #fff;
     cursor: default;
   }
+  #life .content-wrap .nav>div{
+    height: 60px;
+  }
   #life .content-wrap .nav .wrap-title{
     padding: 0 0px 0 5px;
     font-size: 16px;
@@ -495,10 +598,107 @@
     height: 60px;
     line-height: 60px;
   }
-  #life .content-wrap .nav .glyphicon{
-    top: 2px;
-    margin-left: 3px;
+  #life .content-wrap .nav .opt-box{
+    width: 40px;
+    height: 20px;
+    line-height: 20px;
+    position: relative;
+    vertical-align: middle;
+    display: inline-block;
+    margin-left: 5px;
     cursor: pointer;
+  }
+  #life .content-wrap .nav .opt-box *{
+    transition: all 0.8s;
+    -moz-transition: all 0.8s; /* Firefox 4 */
+    -webkit-transition: all 0.8s; /* Safari 和 Chrome */
+    -o-transition: all 0.8s; /* Opera */
+  }
+  #life .content-wrap .nav .opt-box .opt-font{
+    opacity: 0;
+    font-size: 12px;
+    color: #ececec;
+    vertical-align: middle;
+    position: absolute;
+    left: 0px;
+    top: -1px;
+    /*font-weight: 600;*/
+  }
+  #life .content-wrap .nav .opt-box:hover >.opt-font{
+    opacity: 0.8;
+    transform: translate(19px, 0px);
+    -webkit-transform: translate(19px, 0px);
+    -moz-transform: translate(19px, 0px);
+    -o-transform: translate(19px, 0px);
+    -ms-transform: translate(19px, 0px);
+    /*display: inline-block;*/
+  }
+  #life .content-wrap .nav .opt-box:hover >.glyphicon{
+    transform: rotate(200deg);
+    -webkit-transform: rotate(200deg);
+    -moz-transform: rotate(200deg);
+    -o-transform: rotate(200deg);
+    -ms-transform: rotate(200deg);
+  }
+  #life .content-wrap .nav .hurry-box{
+    width: 45px;
+    height: 20px;
+    line-height: 20px;
+    position: relative;
+    vertical-align: middle;
+    top: -2px;
+    border: 1px solid #ddd;
+    box-sizing: content-box;
+    border-radius: 2px;
+    background-color: transparent;
+    display: inline-block;
+    font-size:0px;
+  }
+  #life .content-wrap .nav .hurry-box span{
+    display: inline-block;
+    width: 50%;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    background-color: #ececec;
+    transition: all 0.2s;
+    -moz-transition: all 0.2s; /* Firefox 4 */
+    -webkit-transition: all 0.2s; /* Safari 和 Chrome */
+    -o-transition: all 0.2s; /* Opera */
+    user-select: none;
+  }
+  #life .content-wrap .nav .hurry-box span.hurry{
+    background-color: transparent;
+    color: #ececec;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  #life .content-wrap .nav .hurry-box span.hurry:hover{
+    opacity: 1;
+    color: #f1f1f1;
+  }
+  #life .content-wrap .nav .hurry-box.hurry span.hurry{
+    background-color: #ececec;
+    color: #666;
+    cursor: default;
+    opacity: 1;
+  }
+  #life .content-wrap .nav .hurry-box.hurry span.hurry:hover{
+    color: #666;
+  }
+  #life .content-wrap .nav .hurry-box.hurry span.common{
+    background-color: transparent;
+    color: #ececec;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  #life .content-wrap .nav .hurry-box.hurry span.common:hover{
+    opacity: 1;
+    color: #f1f1f1;
+  }
+  #life .content-wrap .nav .glyphicon{
     color: #ececec;
     font-size: 14px;
   }
@@ -508,8 +708,10 @@
   #life .content-wrap .nav .glyphicon.glyphicon-question-sign{
     font-size: 18px;
     position: relative;
-    top: 6px;
+    vertical-align: middle;  
+    display: inline-block;
   }
+
   #life .content-wrap .content,
   #life .content-wrap .content-default{
     position: relative;
@@ -546,13 +748,6 @@
     height: 100%;
     float: left;
   }
-  #life .content-wrap .content-default .right-box{
-    display: inline-block;
-    width: 51%;
-    text-align: left;
-    height: 100%;
-    float: right;
-  }
   #life .content-wrap .content-default .left-box h1.text-title {
     font-size: 172px;
     font-weight: 100;
@@ -582,6 +777,11 @@
     font-weight: 300;
   }
   #life .content-wrap .content-default .right-box{
+    display: inline-block;
+    width: 51%;
+    text-align: left;
+    height: 100%;
+    float: right;
     background-image: url("../assets/img/bg-11.jpg");
     background-size:100%;
   }
@@ -597,7 +797,8 @@
     height: 100%;
   }
 
-  #life .goalPopLink{
+  #life .goalPopLink,
+  #life .pathPopLink{
     position: absolute;
     opacity: 0;
   }

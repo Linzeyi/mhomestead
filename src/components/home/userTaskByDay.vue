@@ -101,7 +101,7 @@ import NumSelector from '../utils/numSelector.vue'
               $('[data-toggle="popover'+i+'"]').popover()
             }
           })
-          this.userTaskList = this.TaskAchieveSort(this.userTaskList)
+          this.userTaskList = this.sortUtil.TaskAchieveSort(this.userTaskList)
         }).catch((e) => {
           console.log("error:" + e)
         })
@@ -117,12 +117,12 @@ import NumSelector from '../utils/numSelector.vue'
       changeTaskStatus: function(item){
         item.is_achieve = !item.is_achieve
         if (item.is_achieve) {
-          item.achieve_time = this.DateFormate(new Date())
+          item.achieve_time = this.datetime.DateFormate(new Date())
         }
         else {
           item.achieve_time = null
         }
-        this.userTaskList = this.TaskAchieveSort(this.userTaskList)
+        this.userTaskList = this.sortUtil.TaskAchieveSort(this.userTaskList)
       },
       popTaskDetailModal: function(item){
         this.currentTask = item
@@ -143,7 +143,7 @@ import NumSelector from '../utils/numSelector.vue'
       TaskPop,
       NumSelector
     }
-  }
+  };
 </script>
 
 <style>

@@ -79,7 +79,12 @@
     },
     methods: {
       init: function(){
-        
+        // this.$store.dispatch('user/GetUserInfo').then((res) => {
+        //   console.log("用户信息：")
+        //   console.log(res.data.data)
+        // }).catch((e) => {
+        //   console.log(e)
+        // })
       },
       slideTopContainer: function(e){
         this.topShow = !this.topShow
@@ -93,7 +98,7 @@
         console.log(this.topInfo)
       }
     }
-  }
+  };
 </script>
 
 <style>

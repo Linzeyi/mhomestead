@@ -39,6 +39,15 @@ const actions = {
       })
     })
   },
+  GetAllTagsByType({commit},type){
+    return new Promise((resolve,reject) => {
+      tagsJs.getAllTagsByType(type).then(res =>{
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
   SaveTag({commit},tag){
     return new Promise((resolve,reject) =>{
       tagsJs.saveTag(tag).then(res =>{

@@ -1,43 +1,45 @@
 <template>
   <div id="friendsListBox">
-    <div class="friendsList-header">
-      <div class="row">
-        <div class="col-md-8 right-panel">
-          <p>
-            <i class="iconfont icon-people">&#xe6c3;</i>推荐列表
-            <span class="type-font" v-if="recommendType == 'friendNum'">（共同好友）</span>
-            <span class="type-font" v-if="recommendType == 'interest'">（共同兴趣）</span>
-            <span class="my-interest" v-if="recommendType == 'interest'">我的兴趣：{{userInfo.interest}}</span></p>
-        </div>
-        <div class="col-md-4 icon-group">
-          <p>
-            <span class="group-title">推荐条件:</span>
-            <span 
-            class="group-icon" 
-            v-for="(typeItem,typeIndex) in selectTypeArr" 
-            :class="[typeItem.class,typeItem.class == recommendType?'active':'']"
-            @click="selectType(typeItem)">{{typeItem.name}}</span>
-            <button class="change-btn" @click="changePeople"><i class="iconfont icon-change">&#xe616;</i>换一批</button>
-          </p>
+    <div class="friends-list-wrap">
+      <div class="friendsList-header">
+        <div class="row">
+          <div class="col-md-7 left-panel">
+            <p>
+              <i class="iconfont icon-people">&#xe6c3;</i>推荐列表
+              <span class="type-font" v-if="recommendType == 'friendNum'">（共同好友）</span>
+              <span class="type-font" v-if="recommendType == 'interest'">（共同兴趣）</span>
+              <span class="my-interest" v-if="recommendType == 'interest'">我的兴趣：{{userInfo.interest}}</span></p>
+          </div>
+          <div class="col-md-5 icon-group">
+            <p>
+              <span class="group-title">推荐条件:</span>
+              <span 
+              class="group-icon" 
+              v-for="(typeItem,typeIndex) in selectTypeArr" 
+              :class="[typeItem.class,typeItem.class == recommendType?'active':'']"
+              @click="selectType(typeItem)">{{typeItem.name}}</span>
+              <button class="change-btn" @click="changePeople"><i class="iconfont icon-change">&#xe616;</i>换一批</button>
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="friendsList-body">
-      <div class="row" v-for="rowIndex in objGroupNum">
-        <div class="col-md-2" v-for="(item,index) in rowObjGroup(rowIndex)" >
-          <div class="item-box" :class="{'male': item.people_sex,'female': !item.people_sex}">
-            <div class="portrait-box">
-              <i class="iconfont icon-male">&#xe659;</i>
-              <i class="iconfont icon-female">&#xe657;</i>
+      <div class="friendsList-body">
+        <div class="row" v-for="rowIndex in objGroupNum">
+          <div class="col-md-2" v-for="(item,index) in rowObjGroup(rowIndex)" >
+            <div class="item-box" :class="{'male': item.people_sex,'female': !item.people_sex}">
+              <div class="portrait-box">
+                <i class="iconfont icon-male">&#xe659;</i>
+                <i class="iconfont icon-female">&#xe657;</i>
+              </div>
+              <p class="name">{{item.people_name}}</p>
+              <p class="num" v-if="recommendType == 'friendNum'">{{item.weight}}位共同好友</p>
+              <p class="interest" v-if="recommendType == 'interest'">
+                <span class="interest-item" v-for="interest in item.people_interest">{{interest}}</span>
+              </p>
+              <p class="btn-p">
+                <button class="addFriend-btn" @click="handleAddNewFriend(item)">添加好友</button>
+              </p>
             </div>
-            <p class="name">{{item.people_name}}</p>
-            <p class="num" v-if="recommendType == 'friendNum'">{{item.weight}}位共同好友</p>
-            <p class="interest" v-if="recommendType == 'interest'">
-              <span class="interest-item" v-for="interest in item.people_interest">{{interest}}</span>
-            </p>
-            <p class="btn-p">
-              <button class="addFriend-btn" @click="handleAddNewFriend(item)">添加好友</button>
-            </p>
           </div>
         </div>
       </div>
@@ -86,7 +88,6 @@
       rowObjGroup: function(){
         return function (rowIndex) {
           var array = Object.assign([], this.peopleList)
-          console.log(rowIndex)
           return array.slice((rowIndex - 1) * 6,rowIndex * 6)
         }
       }
@@ -100,42 +101,55 @@
         this.$emit('changeType',item.class)
       },  
       changePeople: function(){
+        console.log("换一批推荐人")
         this.$emit('changePeople')
       },
       handleAddNewFriend: function(item){
         this.$emit('handleAddNewFriend',item)
       }
     }
-  }
+  };
 </script>
 
 <style>
-  #friendsListBox{
+  #friendsListBox {
     width: 100%;
     height: 100%;
+    background-color: #ddd;
+  }
+  #friendsListBox .friends-list-wrap{
+    width: calc(100% - 30px);
+    height: calc(100% - 30px);
+    position: relative;
+    top: 15px;
+    left: 15px;
+    border-radius: 4px;
+    background-color: #fff;
+    overflow: hidden;
   }
   #friendsListBox .friendsList-header{
     height: 80px;
-    border-bottom: 1px solid #eee;
+    box-shadow: 0px 0px 2px #ddd;
+    /*border-bottom: 1px solid #ddd;*/
   }
   #friendsListBox .friendsList-header .row{
     margin: 0;
     height: 100%;
   }
-  #friendsListBox .friendsList-header .row .right-panel{
+  #friendsListBox .friendsList-header .row .left-panel{
     text-align: left;
   }
-  #friendsListBox .friendsList-header .row .right-panel p{
+  #friendsListBox .friendsList-header .row .left-panel p{
     color: #707070;
     font-size: 25px;
     line-height: 80px;
     font-weight: 600;
   }
-  #friendsListBox .friendsList-header .row .right-panel p .iconfont{
+  #friendsListBox .friendsList-header .row .left-panel p .iconfont{
     margin-left: 15px;
     margin-right: 8px;
   }
-  #friendsListBox .friendsList-header .row .right-panel p .type-font{
+  #friendsListBox .friendsList-header .row .left-panel p .type-font{
     font-size: 16px;
     vertical-align: top;
     display: inline-block;
@@ -143,9 +157,9 @@
     height: 80px;
     color: #d16969;
   }
-  #friendsListBox .friendsList-header .row .right-panel p .my-interest{
+  #friendsListBox .friendsList-header .row .left-panel p .my-interest{
     display: inline-block;
-    width: 60%;
+    width: 55%;
     font-size: 14px;
     color: #999;
     font-weight: 500;

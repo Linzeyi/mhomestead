@@ -3,14 +3,17 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex);
 
-import user from './modules/user/index'
-import task from './modules/task/index'
-import goal from './modules/goal/index'
-import path from './modules/path/index'
+import user from './modules/user/index.js'
+import task from './modules/task/index.js'
+import goal from './modules/goal/index.js'
+import path from './modules/path/index.js'
 import notebook from './modules/notebook/index.js'
 import note from './modules/note/index.js'
 import friend from './modules/friend/index.js'
-import tag from './modules/tag/index'
+import tag from './modules/tag/index.js'
+import chat from './modules/chat/index.js'
+import doc from './modules/doc/index.js'
+import webSocket from './modules/webSocket/index.js'
 
 const state = {
   shownFixed: false,
@@ -47,6 +50,9 @@ export default new Vuex.Store({
     tag: tag,
     notebook: notebook,
     note: note,
-    friend: friend
+    friend: friend,
+    chat: chat,
+    doc: doc,
+    webSocket: webSocket
   }
 })

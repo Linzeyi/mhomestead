@@ -78,6 +78,7 @@
     },
     watch: {
       '$route': function(to, from) {
+        $('.modal-backdrop.in').remove()
       }
     },
     methods: {

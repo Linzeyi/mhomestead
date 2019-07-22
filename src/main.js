@@ -49,6 +49,8 @@ import 'vuescroll/dist/vuescroll.css';
 
 Vue.use(vuescroll);
 
+
+
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

@@ -26,6 +26,15 @@ export function saveTag(tag) {
     data: tag
   })
 }
+export function getAllTagsByType(type){
+  return interceptor({
+    url: 'tags/getAllTagsByType',
+    method: 'post',
+    params: {
+      type
+    }
+  })
+}
 export function deleteTag(tags_id) {
   return interceptor({
     url: 'tags/deleteTag',

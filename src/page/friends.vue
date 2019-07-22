@@ -1,15 +1,15 @@
 <template>
-  <div id="friends" :class="{'male': userInfo.sex,'female': !userInfo.sex}">
+  <div id="friends">
     <div class="container-fluid">
       <div class="header-wrap">
         <div class="row">
           <div class="col-md-6">
             <div class="portrait-box">
-              <i class="iconfont icon-male">&#xe659;</i>
-              <i class="iconfont icon-female">&#xe657;</i>
+              <i class="iconfont icon-male" v-if="getSex">&#xe659;</i>
+              <i class="iconfont icon-female" v-else>&#xe657;</i>
             </div>
             <div class="userinfo-box">
-              <p class="user-name">{{userInfo.name}}</p>
+              <p class="user-name">{{getName}}</p>
             </div>
           </div>
           <div class="col-md-6 right-panel">
@@ -31,8 +31,12 @@
           </div>
           <div class="list-wrap">
             <ul class="friends-list">
-              <li class="default-li"><i class="iconfont icon-friends">&#xe639;</i>好友列表</li>
-              <li class="friend-li" v-for="(item,index) in searchFriendsList" :class="{'male': item.friend_sex,'female': !item.friend_sex}" @click="selectFriend(item)">
+              <li class="default-li">
+                <p>
+                  <i class="iconfont icon-friends">&#xe639;</i>好友列表
+                </p>
+              </li>
+              <li class="friend-li" v-for="(item,index) in searchFriendsList" :class="{'male': item.friend_sex,'female': !item.friend_sex,'on': item.friend_id == currentFriend.friend_id}" @click="selectFriend(item)">
                 <div class="portrait-box">
                   <i class="iconfont icon-male">&#xe659;</i>
                   <i class="iconfont icon-female">&#xe657;</i>
@@ -49,15 +53,19 @@
           </div>
         </div>
         <div class="content-wrap">
-          <friendsList-box 
+          <chat-room 
+          v-if="currentFriend != '' && !isFriendsListBox"
+          :userInfo="userInfo"
+          :friendInfo="currentFriend"></chat-room>
+          <friendsListBox 
           v-if="isFriendsListBox" 
           :peopleList="searchPeopleList"
           :recommendType="recommendType"
           :userInfo="userInfo"
           @changePeople="changePeople"
           @changeType="changeType"
-          @handleAddNewFriend="handleAddNewFriend"></friendsList-box>
-          <div class="default-box" v-else>
+          @handleAddNewFriend="handleAddNewFriend"></friendsListBox>
+          <div class="default-box" v-if="currentFriend == '' && !isFriendsListBox">
             <div class="default-title">
               <p><font class="english">FREIEND</font><font class="chinese">.好友专区</font></p>
               <p class="bottom-font">点击好友推荐，看看系统给你推荐的好友吧！</p>
@@ -74,13 +82,16 @@
     role="dialog" >
       <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">确定删除好友？</h4>
+          </div>
           <div class="modal-body">
-            <h4>确定删除好友</h4>
             <h3>【{{deleteFriendItem.friend_name}}】</h3>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary" @click.stop="deleteFriend()">确定</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" @click.stop="deleteFriend()">确定</button>
           </div>
         </div>
       </div>
@@ -94,13 +105,16 @@
     role="dialog" >
       <div class="modal-dialog modal-sm" role="document">
         <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">是否添加好友？</h4>
+          </div>
           <div class="modal-body">
-            <h4>是否添加好友</h4>
             <h3>【{{newFriendItem.people_name}}】</h3>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-              <button type="button" class="btn btn-primary" @click.stop="addNewFriend()">确定</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" @click.stop="addNewFriend()">确定</button>
           </div>
         </div>
       </div>
@@ -110,25 +124,30 @@
 
 <script>
   import friendsListBox from '../components/friend/friendsListBox.vue'
+  import chatRoom from '../components/friend/chatRoom.vue'
 
   export default{
     data: function(){
       return {
-        userInfo: {},
-        friendsList: [],
-        peopleList: [],
-        searchFriendVal: '',
-        searchPeopleVal: '',
-        currenFriend: {},
-        deleteFriendItem: {},
-        newFriendItem: {},
-        isFriendsListBox: false,
-        recommendType: 'friendNum'
+        'userInfo': {},
+        'friendsList': [],
+        'peopleList': [],
+        'searchFriendVal': '',
+        'searchPeopleVal': '',
+        'currentFriend': '',
+        'deleteFriendItem': {},
+        'newFriendItem': {},
+        'isFriendsListBox': false,
+        'recommendType': 'friendNum',
       }
     },
-    mounted: function(){
+    created: function(){
       this.getUserInfo()
       this.getUserFriends()
+    },
+    mounted: function(){
+      
+      
     },
     watch: {
       'recommendType': function(){
@@ -136,6 +155,12 @@
       }
     },
     computed: {
+      getSex: function(){
+        return this.$store.getters['user/sex']
+      },
+      getName: function(){
+        return this.$store.getters['user/name']
+      },
       searchFriendsList: function(){
         var _this = this
         var NewItems = []
@@ -164,7 +189,8 @@
       },
       addNewFriend: function(){
         this.$store.dispatch('friend/AddNewFriend',this.newFriendItem.people_id).then((res) => {
-          // console.log(res)
+          console.log("添加好友【" + this.newFriendItem.people_name + "】")
+          console.log(res)
           this.$refs.add_friend_pop_el.click()
           this.getPeopleList()
           this.getUserFriends()
@@ -180,7 +206,8 @@
       },
       getUserInfo: function(){
         this.$store.dispatch('user/GetUserInfo').then((res) => {
-          // console.log(res)
+          console.log("获取用户基本信息：")
+          console.log(res)
           this.userInfo = res.data.data
         }).catch((e) => {
           console.log("error:" + e)
@@ -188,7 +215,8 @@
       },
       getUserFriends: function(){
         this.$store.dispatch('friend/GetUserFriends').then((res) => {
-          // console.log(res)
+          console.log("获取用户的好友列表：")
+          console.log(res)
           this.friendsList = res.data.data
         }).catch((e) => {
           console.log("error:" + e)
@@ -196,7 +224,9 @@
       },
       getPeopleList: function(){
         this.$store.dispatch('friend/GetPeopleList',this.recommendType).then((res) => {
-          // console.log(res)
+          console.log("获取推荐好友列表（陌生人）：")
+          console.log("推荐条件为：" + (this.recommendType == 'friendNum'?"共同好友数量":"共同兴趣爱好"))
+          console.log(res)
           this.peopleList = res.data.data
           this.isFriendsListBox = true
         }).catch((e) => {
@@ -204,7 +234,8 @@
         })
       },
       selectFriend: function(item){
-        this.currenFriend = item
+        this.currentFriend = item
+        this.isFriendsListBox = false
       },
       handleDeleteFriend: function(item){
         this.deleteFriendItem = item
@@ -212,10 +243,14 @@
       },
       deleteFriend: function(){
         this.$store.dispatch('friend/DeleteFriend',this.deleteFriendItem.friend_id).then((res) => {
-          // console.log(res)
+          console.log("删除好友【" + this.deleteFriendItem.friend_name + "】")
+          console.log(res.data)
           this.getUserInfo()
           if(this.isFriendsListBox){
             this.getPeopleList()
+          }
+          if(this.currentFriend.friend_id == this.deleteFriendItem.friend_id){
+            this.currentFriend = ''
           }
           this.getUserFriends()
           this.$refs.delete_friend_pop_el.click()
@@ -225,9 +260,10 @@
       }
     },
     components: {
-      friendsListBox
+      friendsListBox,
+      chatRoom
     }
-  }
+  };
 </script>
 
 <style>
@@ -250,11 +286,13 @@
     height: 100%;
   }
   #friends .container-fluid{
-    height: 100%;
-    width: 90%;
+    height: 95%;
+    top: 15px;
+    width: 94%;
     position: relative;
+    box-shadow: 0px 0px 15px 0px #2f1623;
+    border-radius: 4px;
     padding: 0;
-    background-color: rgba(255, 255, 255, 0.9);
     z-index: 2;
     overflow: hidden;
     transition: all 0.3s;
@@ -262,98 +300,81 @@
     -webkit-transition: all 0.3s; /* Safari 和 Chrome */
     -o-transition: all 0.3s; /* Opera */
   }
-  #friends .container-fluid:hover{
-    background-color: rgba(255, 255, 255, 1);
-  }
   #friends .container-fluid .header-wrap{
-    height: 100px;
+    min-height: 80px;
     padding: 20px;
+    background-color: #fff;
+    box-shadow: 0px 1px 2px #cccccc;
     position: relative;
     z-index: 10;
-  }
-  #friends.male .container-fluid .header-wrap{
-    background-color: rgba(111, 135, 171, 0.8);
-    box-shadow: 1px 0 5px 1px #4f6584;
-  }
-  #friends.female .container-fluid .header-wrap{
-    background-color: rgba(234, 184, 184, 0.8);
-    box-shadow: 1px 0 5px 1px #a86969;
   }
   #friends .container-fluid .header-wrap .row{
     margin: 0;
     text-align: left;
+    height: 100%;
   }
   #friends .container-fluid .header-wrap .row .portrait-box{
     box-sizing: border-box;
-    width: 48px;
-    height: 48px;
-    margin: 6px 6px;
+    width: 40px;
+    height: 40px;
+    line-height: 35px;
+    margin: 0 6px;
     display: inline-block;
     text-align: center;
     border: 3px solid #fff;
     border-radius: 4px;
   }
   #friends .container-fluid .header-wrap .row .portrait-box .iconfont{
-    display: none;
-    height: 42px;
-    width: 42px;
-    font-size: 42px;
+    height: 100%;
+    width: 100%;
+    font-size: 32px;
     color: #fff;
-    line-height: 43px;
-    border-radius: 4px;
-  }
-  #friends.male .container-fluid .header-wrap .row .portrait-box .icon-male{
     background-color: #6783ad;
-    display: inline-block;
-  }
-  #friends.female .container-fluid .header-wrap .row .portrait-box .icon-female{
-    display: inline-block;
-    background-color: #da6b6b;
+    border-radius: 4px;
   }
   #friends .container-fluid .header-wrap .row .userinfo-box{
     display: inline-block;
     vertical-align: top;
-    height: 60px;
+    height: 40px;
+    line-height: 40px;
     width: calc(100% - 70px);
     overflow: hidden;
     text-overflow:ellipsis;
     white-space: nowrap;
   }
   #friends .container-fluid .header-wrap .row .userinfo-box .user-name{
-    font-size: 30px;
+    font-size: 22px;
     font-weight: 600;
-    color: #fff;
-    line-height: 64px;
+    color: #6783ad;
   }
   #friends .container-fluid .header-wrap .row .right-panel .option-wrap{
     width: 100%;
-    height: 60px;
+    height: 40px;
     text-align: right;
   }
   #friends .container-fluid .header-wrap .row .right-panel .option-wrap .search-input-box{
     width: 50%;
-    height: 60px;
-    padding: 10px 20px;
+    height: 100%;
+    padding: 0px 20px;
     display: inline-block;
   }
   #friends .container-fluid .header-wrap .row .right-panel .option-wrap .search-input-box input{
     width: 100%;
-    height: 100%;
+    height: 36px;
+    margin: 2px 0;
     text-indent: 10px;
     border-radius: 4px;
-    border: none;
+    border: 1px solid #ddd;
     font-size: 12px;
     background-color: #fff;
   }
-  #friends.male .container-fluid .header-wrap .row .right-panel .option-wrap .search-input-box input{
-    color: #6783ad;
-  }
-  #friends.female .container-fluid .header-wrap .row .right-panel .option-wrap .search-input-box input{
-    color: #da6b6b;
+  #friends .container-fluid .header-wrap .row .right-panel .option-wrap .search-input-box input:focus{
+    border-color: #aaa;
   }
   #friends .container-fluid .header-wrap .row .right-panel .option-wrap button{
     display: inline-block;
-    margin: 10px 0;
+    vertical-align: top;
+    margin: 2px 0;
     height: 36px;
     font-size: 12px;
     padding: 0 15px;
@@ -379,19 +400,22 @@
 
   #friends .container-fluid .body-wrap{
     position: relative;
-    height: calc(100% - 100px);
+    height: calc(100% - 80px);
     width: 100%;
   }
   #friends .container-fluid .body-wrap .sidebar-wrap{
     position: absolute;
     left: 0;
-    width: 240px;
+    width: 210px;
     height: 100%;
-    border-right: 1px solid #ddd;
+    box-sizing: border-box;
+    z-index: 9;
+    box-shadow: 0 1px 1px #aaa;
   }
   #friends .container-fluid .body-wrap .sidebar-wrap .header-box{
     height: 80px;
     padding: 20px 25px;
+    background-color: #fff;
     border-bottom: 1px solid #ddd;
   }
   #friends.male .container-fluid .body-wrap .sidebar-wrap .header-box{
@@ -408,11 +432,14 @@
   #friends .container-fluid .body-wrap .sidebar-wrap .header-box .input-box input{
     height: 100%;
     width: 100%;
-    border: none;
+    border: 1px solid #ddd;
     border-radius: 4px;
     text-indent: 8px;
     background-color: #fff;
     font-size: 12px;
+  }
+  #friends .container-fluid .body-wrap .sidebar-wrap .header-box .input-box input:focus{
+    border-color: #ccc;
   }
   #friends.male .container-fluid .body-wrap .sidebar-wrap .header-box .input-box input{
     color: #6783ad;
@@ -425,11 +452,8 @@
     height: calc(100% - 80px);
     width: 100%;
   }
-  #friends.male .container-fluid .body-wrap .sidebar-wrap .list-wrap{
-    background-color: #f1f1f1;
-  }
-  #friends.female .container-fluid .body-wrap .sidebar-wrap .list-wrap{
-    background-color: #f1f1f1;
+  #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap{
+    background-color: #fff;
   }
   #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list{
     height: 100%;
@@ -445,13 +469,18 @@
     position: relative;
     cursor: default;
   }
+  #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li.on{
+    background-color: #f5f5f5;
+  }
   #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li.friend-li:hover{
-    background-color: #dddfe2; 
+    background-color: #eaeaea; 
   }
   #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li.friend-li:hover>.content-box p button.delete-btn{
     display: inline-block;
   }
-  #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li.default-li{
+
+  #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li.default-li p{
+    border-bottom: 1px solid #eee;
     height: 46px;
     line-height: 50px;
     color: #999;
@@ -490,6 +519,7 @@
   #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li .content-box {
     display: inline-block;
     width: calc(100% - 34px);
+    height: 100%;
     vertical-align: top;
   }
   #friends .container-fluid .body-wrap .sidebar-wrap .list-wrap .friends-list li .content-box p{
@@ -531,15 +561,19 @@
     border: none;
   }
 
+
+
   #friends .container-fluid .body-wrap .content-wrap{
     position: absolute;
-    left: 240px;
-    width: calc(100% - 240px);
+    left: 210px;
+    width: calc(100% - 210px);
     height: 100%;
+    background-color: #fff;
   }
   #friends .container-fluid .body-wrap .content-wrap .default-box{
     width: 100%;
     height: 100%;
+    background-color: #eee;
     text-align: center;
     position: relative;
     padding: 0 40px;
@@ -558,7 +592,7 @@
     padding: 0 40px;
   }
   #friends .container-fluid .body-wrap .content-wrap .default-box .default-title p{
-    color: #bfbfbf;
+    color: #adadaf;
     border-bottom: 1px solid #ddd;
     font-weight: 600;
   }
@@ -567,14 +601,15 @@
     line-height: 80px;
   }
   #friends .container-fluid .body-wrap .content-wrap .default-box .default-title p .chinese{
-    font-size: 40px;
-    line-height: 82px;
+    font-size: 34px;
+    line-height: 75px;
   }
   #friends .container-fluid .body-wrap .content-wrap .default-box .default-title p.bottom-font{
-    color: #ddd;
+    color: #ccc;
     border: none;
-    line-height: 60px;
+    line-height: 56px;
     font-size: 20px;
+    font-weight: 400;
   }
 
   #friends .friendPopLink{
@@ -584,7 +619,7 @@
   }
   #friends #delete_friend_pop,
   #friends #add_friend_pop{
-    top: 60px;
+    top: 70px;
   }
   #friends .container-fluid input::-webkit-input-placeholder { /* WebKit browsers */
     color: #d1d1d1;
@@ -598,5 +633,6 @@
   #friends .container-fluid input:-ms-input-placeholder { /* Internet Explorer 10+ */
     color: #d1d1d1;
   }
+
 
 </style>

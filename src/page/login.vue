@@ -125,12 +125,17 @@
         // }
         if(this.errors.length == 0){
           this.$store.dispatch('user/SignIn',this.loginForm).then((res) => {
-            console.log("用户［" + res.data.data.name + "]登录成功:")
+            console.log("用户［" + res.data.data.username + "]登录成功:")
             console.log(res.data)
             this.$router.push('/home')
           }).catch((e) => {
             console.log("error:" + e)
-            this.errors.push(e)
+            if(e){
+              this.errors.push("登陆失败。")
+            }
+            else{
+              this.errors.push(e)
+            }
             this.$store.dispatch('user/FedSignOut')
           })
         }
@@ -148,7 +153,7 @@
     components: {
       BgBoard
     }
-  }
+  };
 </script>
 
 <style>

@@ -29,6 +29,16 @@ const actions = {
       })
     })
   },
+  GetShareNotes({commit}){
+    return new Promise((resolve,reject) =>{
+      noteJs.getShareNotes().then(res =>{
+        // console.log(res)
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
   GetCollectedNotes({commit}){
     return new Promise((resolve,reject) =>{
       noteJs.getCollectedNotes().then(res =>{
@@ -43,6 +53,15 @@ const actions = {
     return new Promise((resolve,reject) =>{
       noteJs.getNoteById(note_id).then(res =>{
         // console.log(res)
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+  GetNotesByTagName({commit},tags_name){
+    return new Promise((resolve,reject) => {
+      noteJs.getNotesByTagName(tags_name).then(res =>{
         resolve(res)
       }).catch(err => {
         reject(err)

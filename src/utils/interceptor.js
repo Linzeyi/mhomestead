@@ -29,10 +29,12 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   response => {
     // console.log("拦截器-response:")
-    console.log(response)
+    // console.log(response.data)
     if(response.data.code != '200' || response.data.code != 200){
-      if (response.data.code === '5' || response.data.code === 5) {  //token过期，返回login
+      if (response.data.code === '5' || response.data.code === 5 || response.data.code === '4' || response.data.code === 4) {  //token过期，返回login
         router.go(0)
+        console.log("返回登陆页")
+        store.dispatch("user/SignOut")
         router.push('/login')
       }
       else{

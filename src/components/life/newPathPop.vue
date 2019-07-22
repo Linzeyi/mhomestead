@@ -26,10 +26,28 @@
               <textarea class="plc-color form-control" rows="3" placeholder="添加路线描述" v-model="newPathObj.path_detail"></textarea>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" @click="addNewPath()">提交</button>
+          <div class="modal-panel">
+            <span class="title-content">
+              是否紧急：
+            </span>
+            <div class="select-content">
+              <div class="switch-box" :class="{'hurry':newPathObj.is_hurry}">
+                <div class="circle"></div>
+                <p>
+                  <span class="common" @click="switchStatus(0)"></span>
+                  <span class="hurry" @click="switchStatus(1)"></span>
+                </p>
+              </div>
+              <span class="switch-font">
+                <font class="hurry" v-if="newPathObj.is_hurry">紧急</font>  
+                <font class="common" v-else>正常</font>  
+              </span>
+            </div>
           </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" @click="addNewPath()">提交</button>
         </div>
       </div>
     </div>
@@ -42,23 +60,41 @@
       return {
         newPathObj: {
           'path_title': '',
-          'path_detail': ''
+          'path_detail': '',
+          'is_hurry': false
         },
         error: ''
       }
     },
+    created: function(){
+      this.newPathObj = {
+          'path_title': '',
+          'path_detail': '',
+          'is_hurry': false
+        }
+    },
     methods: {
+      switchStatus: function(flag){
+        if(flag){
+          this.newPathObj.is_hurry = true
+        }
+        else {
+          this.newPathObj.is_hurry = false
+        }
+      },
       addNewPath: function(){
         if(this.newPathObj.path_title == ''){
           this.error = "标题不能为空！"
         }
         else{
           this.$store.dispatch('path/AddNewPath',this.newPathObj).then((res) => {
-            // console.log(res.data)
+            console.log("创建新的路线：")
+            console.log(res.data)
             this.$emit('handleNewPath')
             this.newPathObj = {
               'path_title': '',
-              'path_detail': ''
+              'path_detail': '',
+              'is_hurry': false
             }
           }).catch((e) => {
             console.log("error:" + e)
@@ -106,7 +142,7 @@
     width: 60%;
     text-indent: 10px;
     font-size: 13px;
-    color: #888;
+    color: #444;
   }
   #new_path_pop .modal-body .modal-panel .input-content input.error{
     border-color: #d9534f;
@@ -120,9 +156,89 @@
     border: 1px solid #ddd;
     border-radius: 2px;
     box-shadow: none;
-    color: #888;
+    color: #444;
     font-size: 13px;
     resize: none;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content{
+    display: inline-block;
+    width: calc(100% - 100px);
+    vertical-align: top;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box{
+    position: relative;
+    width: 48px;
+    height: 15px;
+    vertical-align: middle;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    display: inline-block;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box .circle{
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    top: -8px;
+    left: -2px;
+    border: 1px solid #ddd;
+    border-radius: 50px;
+    background-color: #fff;
+    transition: all 0.2s;
+    -moz-transition: all 0.2s; /* Firefox 4 */
+    -webkit-transition: all 0.2s; /* Safari 和 Chrome */
+    -o-transition: all 0.2s; /* Opera */
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box.hurry{
+    /*border-color: #a52626;*/
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box.hurry .circle{
+    left: 20px;
+    /*border-color: #a52626;*/
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box p{
+    width: 0px;
+    height: 100%;
+    line-height: 15px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    font-size: 0px;
+    overflow: hidden;
+    background-color: #b96262;
+    transition: all 0.3s;
+    -moz-transition: all 0.3s; /* Firefox 4 */
+    -webkit-transition: all 0.3s; /* Safari 和 Chrome */
+    -o-transition: all 0.3s; /* Opera */
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box.hurry p{
+    width: 50%;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box p span{
+    display: inline-block;
+    height: 100%;
+    width: 50%;
+    cursor: pointer;
+    position: absolute;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box p span.common{
+    left: 0px;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-box p span.hurry{
+    right: 0;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-font{
+    display: inline-block;
+    margin-left: 4px;
+    vertical-align: middle;
+    font-size: 12px;
+    height: 15px;
+    line-height: 15px;
+    font-weight: 500;
+    color: #aaa;
+  }
+  #new_path_pop .modal-body .modal-panel .select-content .switch-font .hurry{
+    color: #b96262;
   }
   #new_path_pop .modal-body .modal-panel .error-font{
     font-size: 12px;

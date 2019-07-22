@@ -19,6 +19,26 @@ const actions = {
       })
     })
   },
+  GetUserHurryPaths({commit}){
+    return new Promise((resolve,reject) =>{
+      pathJs.getUserHurryPaths().then(res =>{
+        // console.log(res)
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
+  UpdatePath({commit},path){
+    return new Promise((resolve,reject) =>{
+      pathJs.updatePath(path).then(res =>{
+        // console.log(res)
+        resolve(res)
+      }).catch(err => {
+        reject(err)
+      })
+    })
+  },
   DeletePath({commit},path_id){
     return new Promise((resolve,reject) =>{
       pathJs.deletePath(path_id).then(res =>{

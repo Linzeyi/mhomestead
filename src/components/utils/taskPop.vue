@@ -79,7 +79,7 @@
       getDays: function(){
         var days 
         if(this.currentTask.is_achieve){
-          days = this.DateDiff(this.currentTask.destination_time,this.currentTask.achieve_time)
+          days = this.datetime.DateDiff(this.currentTask.destination_time,this.currentTask.achieve_time)
           if(days < 0){
             return '提前' + -days + '天完成'
           }
@@ -91,7 +91,7 @@
           }
         }
         else {
-          days = this.DateDiffNow(this.currentTask.destination_time)
+          days = this.datetime.DateDiffNow(this.currentTask.destination_time)
           if(days < 0){
             return '延期' + -days + '天'
           }

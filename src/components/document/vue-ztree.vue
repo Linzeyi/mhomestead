@@ -2,7 +2,7 @@
   <div class="ztree_content_wrap">
     <div class="zTreeDemoBackground left">
       <ul class="ztree">
-        <ztree-item v-for='(item,index) in treeDataSource' :key="index" :model="item" :num='index' root='0' :nodes='treeDataSource.length' :callback='func' :expandfunc='expand' :cxtmenufunc='contextmenu' :trees='treeDataSource'></ztree-item>
+        <ztree-item v-for='(item,index) in treeDataSource' :key="index" :model="item" :num='index' root='0' :nodes='treeDataSource.length' :callback='func' :expandfunc='expand' :cxtmenufunc='contextmenu' :trees='treeDataSource' :currentDoc="currentDoc"></ztree-item>
       </ul>
     </div>
   </div>
@@ -42,6 +42,9 @@ export default{
     isOpen:{
       type:Boolean,
       default:false
+    },
+    currentDoc:{
+      type: Object
     }
   },
   methods:{
@@ -55,7 +58,7 @@ export default{
           m.clickNode = m.hasOwnProperty("clickNode") ? m.clickNode : false;
           m.children = m.children || [];
 
-          if(m.children.length>0){
+          if(m.doc_type == 'folder'){
             m.isFolder =  m.hasOwnProperty("open") ? m.open : this.isOpen;
             m.isExpand =  m.hasOwnProperty("open") ? m.open : this.isOpen;
             m.loadNode = 0; 
@@ -106,6 +109,16 @@ export default{
         },
         cxtmenufunc:{
           type:Function
+        },
+        currentDoc: {
+          type: Object
+        }
+      },
+      watch: {
+        'currentDoc': function(){
+          if(this.model.doc_id == this.currentDoc.doc_id){
+            this.Func(this.currentDoc)
+          }
         }
       },
       methods:{
@@ -116,8 +129,7 @@ export default{
           // 查找点击的子节点
           var recurFunc = (data) => {
             data.forEach(function(i){
-              if(i.id==m.id){
-                // console.log(i)
+              if(i.doc_id==m.doc_id){
                 i.clickNode = true;
               }else {
                 i.clickNode = false;
@@ -202,15 +214,15 @@ export default{
       },
       template: 
           `<li :class="liClassVal">
-          <span :class="spanClassVal" @click='open(model)'></span>
-          <a :class="aClassVal" @click='Func(model)' @contextmenu.prevent='cxtmenufunc'>
-          <span :class="{loadSyncNode:model.loadNode==1}" v-if='model.loadNode==1'></span>
-          <span :class='model.iconClass' v-show='model.iconClass' v-else></span>
-          <span class="node_name">{{model.name}}</span>
-          </a>
-          <ul :class="ulClassVal" v-show='model.isFolder'>
-          <ztree-item v-for="(item,index) in model.children" :key="index" :callback='callback' :expandfunc='expandfunc' :model="item" :cxtmenufunc='cxtmenufunc' :num='index' root='1' :nodes='model.children.length' :trees='trees'></ztree-item>
-          </ul>
+            <span :class="spanClassVal" @click='open(model)'></span>
+            <a :class="aClassVal" @click='Func(model)' @contextmenu.prevent='cxtmenufunc'>
+              <span :class="{loadSyncNode:model.loadNode==1}" v-if='model.loadNode==1'></span>
+              <span :class='model.iconClass' v-show='model.iconClass' v-else></span>
+              <span class="node_name">{{model.doc_name}}</span>
+            </a>
+            <ul :class="ulClassVal" v-show='model.isFolder'>
+            <ztree-item v-for="(item,index) in model.children" :key="index" :callback='callback' :expandfunc='expandfunc' :model="item" :cxtmenufunc='cxtmenufunc' :num='index' root='1' :nodes='model.children.length' :trees='trees' :currentDoc="currentDoc"></ztree-item>
+            </ul>
           </li>`
         }
       },
@@ -294,7 +306,6 @@ ul.ztree
   white-space: nowrap;
   outline: 0;
   user-select: none;
-
 }
 
 .ztree li ul
@@ -318,13 +329,18 @@ ul.ztree
   background-color: transparent;
   text-decoration: none;
   vertical-align: top;
-  display: inline-block
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  width:100%;
 }
 
-.ztree li a:hover
+.ztree li a:hover,
+.ztree li .button.switch:hover + a
 {
   text-decoration: underline;
-  color: #555;
+  color: #666;
 }
 
 .ztree li a.curSelectedNode
@@ -367,38 +383,31 @@ ul.ztree
   margin: 0 3px 0 0;
   cursor: auto;
 }
-
-.ztree li span.button.center_docu{
+.ztree li span.button[class*="_docu"]{
   background-image: url("../../assets/img/zTreeImg/ztree/document-solid.png");
 }
-.ztree li span.button.center_docu:hover,
-.ztree li span.button.center_docu.curSelectedNode
+.ztree li span.button[class*="_docu"]:hover,
+.ztree li span.button.curSelectedNode[class*="_docu"]
 {
   background-image: url("../../assets/img/zTreeImg/ztree/document-solid-on.png");
 }
 
-.ztree li span.button.center_open,
-.ztree li span.button.bottom_open
+.ztree li span.button[class*="_open"]
 {
   background-image: url("../../assets/img/zTreeImg/ztree/folder-open-right.png");
 }
-.ztree li span.button.center_open:hover,
-.ztree li span.button.bottom_open:hover,
-.ztree li span.button.center_open.curSelectedNode,
-.ztree li span.button.bottom_open.curSelectedNode
+.ztree li span.button[class*="_open"]:hover,
+.ztree li span.button.curSelectedNode[class*="_open"]
 {
   background-image: url("../../assets/img/zTreeImg/ztree/folder-open-right-on.png");
 }
 
-.ztree li span.button.center_close,
-.ztree li span.button.bottom_close
+.ztree li span.button[class*="_close"]
 {
   background-image: url("../../assets/img/zTreeImg/ztree/folder-close-right.png");
 }
-.ztree li span.button.center_close:hover,
-.ztree li span.button.bottom_close:hover,
-.ztree li span.button.center_close.curSelectedNode,
-.ztree li span.button.bottom_close.curSelectedNode
+.ztree li span.button[class*="_close"]:hover,
+.ztree li span.button.curSelectedNode[class*="_close"]
 {
   background-image: url("../../assets/img/zTreeImg/ztree/folder-close-right-on.png");
 }

@@ -34,7 +34,7 @@
 </template>
 
 <script>
- export default{
+export default{
   name: 'tagsSelector',
   props:[
     'currentData',
@@ -137,7 +137,7 @@
       }
     }
   }
- } 
+};
 </script>
 
 <style>

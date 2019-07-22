@@ -42,10 +42,10 @@
             </span>
             <tags-selector :current-data="newGoalObj" :owner="newGoalObj"></tags-selector>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" @click="addNewGoal()">提交</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" @click="addNewGoal()">提交</button>
         </div>
       </div>
     </div>
@@ -83,11 +83,12 @@
           this.error = "标题不能为空！"
         }
         else{
-          this.newGoalObj.start_time = this.DateFormate(this.range[0])
-          this.newGoalObj.end_time = this.DateFormate(this.range[1])
+          this.newGoalObj.start_time = this.datetime.DateFormate(this.range[0])
+          this.newGoalObj.end_time = this.datetime.DateFormate(this.range[1])
           this.newGoalObj.path = this.path
           this.$store.dispatch('goal/AddNewGoal',this.newGoalObj).then((res) => {
-            // console.log(res.data)
+            console.log("添加新的目标：")
+            console.log(res.data)
             this.$emit('handleNewGoal')
             this.newGoalObj = {
               'goal_title': '',

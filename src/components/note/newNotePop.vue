@@ -18,19 +18,13 @@
               <span class="error-font" v-if="checkTitle">{{errorInfo.error}}</span>
             </div>
           </div>
-          <div class="modal-panel">
-            <span class="title-content">
-              标签集：
-            </span>
-            <tags-selector :current-data="newNoteObj" :owner="newNoteObj"></tags-selector>
-          </div>
           <div class="modal-panel" v-if="checkError">
             <p class="error-font">{{errorInfo.error}}</p>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" @click="addNewNote()">提交</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" @click="addNewNote()">提交</button>
         </div>
       </div>
     </div>
@@ -97,7 +91,8 @@
             this.newNoteObj.notebook = this.currentNotebook
           }
           this.$store.dispatch('note/AddNewNote',this.newNoteObj).then((res) => {
-            // console.log(res.data)
+            console.log("创建一个新的空笔记")
+            console.log(res.data)
             this.$emit('handleNewNote')
             this.newNoteObj = {
               'note_title': '',
@@ -112,7 +107,7 @@
     components: {
       'tagsSelector' : TagsSelector
     }
-  }
+  };
 </script>
 
 <style>
@@ -152,7 +147,7 @@
     width: 60%;
     text-indent: 10px;
     font-size: 13px;
-    color: #888;
+    color: #555;
   }
   #new_note_pop .modal-body .modal-panel .input-content input.error{
     border-color: #d9534f;

@@ -1,5 +1,5 @@
 <template>
-  <div class="model fade" id="goal_detail_option_pop" tabindex="-1" role="dialog" aria-labelledby="goalPopTitle">
+  <div class="modal fade" id="goal_detail_option_pop" tabindex="-1" role="dialog" aria-labelledby="goalPopTitle">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -40,9 +40,9 @@
               </span>
               <span class="modal-date">
                 最早
-                <span class="start-time">{{DateFormate(currentGoal.start_time)}}</span>
+                <span class="start-time">{{datetime.DateFormate(currentGoal.start_time)}}</span>
                 <span class="sub-line"></span>最晚
-                <span class="end-time">{{DateFormate(currentGoal.end_time)}}</span>
+                <span class="end-time">{{datetime.DateFormate(currentGoal.end_time)}}</span>
               </span>
             </p>
           </div>
@@ -54,11 +54,11 @@
               <tags-selector :current-data="currentGoal" :owner="currentGoal"></tags-selector>
             </p>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">返回</button>
-            <button type="button" class="btn btn-primary" @click="changeGoalStatus(1,currentGoal)" v-if="!currentGoal.is_achieve">已完成！！</button>
-            <button type="button" class="btn btn-danger" @click="changeGoalStatus(0,currentGoal)" v-if="currentGoal.is_achieve">还没做好呢...</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">返回</button>
+          <button type="button" class="btn btn-primary" @click="changeGoalStatus(1,currentGoal)" v-if="!currentGoal.is_achieve">已完成！！</button>
+          <button type="button" class="btn btn-danger" @click="changeGoalStatus(0,currentGoal)" v-if="currentGoal.is_achieve">还没做好呢...</button>
         </div>
       </div>
     </div>
@@ -83,7 +83,7 @@
       getDays: function(){
         var days 
         if(this.currentGoal.is_achieve){
-          days = this.DateDiff(this.currentGoal.destination_time,this.currentGoal.achieve_time)
+          days = this.datetime.DateDiff(this.currentGoal.destination_time,this.currentGoal.achieve_time)
           if(days < 0){
             return '提前' + -days + '天完成'
           }
@@ -95,7 +95,7 @@
           }
         }
         else {
-          days = this.DateDiffNow(this.currentGoal.destination_time)
+          days = this.datetime.DateDiffNow(this.currentGoal.destination_time)
           if(days < 0){
             return '延期' + -days + '天'
           }

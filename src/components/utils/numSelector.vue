@@ -72,7 +72,7 @@
         this.currentIndex = this.getData()
       },
       setDaysArr: function(){
-        var days = this.GetDaysOfDate(this.numDataInfo.numData)
+        var days = this.datetime.GetDaysOfDate(this.numDataInfo.numData)
         this.dataArr = []
         for (var i = 1; i <= days; i++) {
           this.dataArr.push(i)

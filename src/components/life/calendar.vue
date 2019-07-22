@@ -3,6 +3,13 @@
     <div class="sidebar-nav">
       <div class="head">
         <span class="glyphicon glyphicon-th-list"></span>目标列表
+        <p class="color-info-panel">
+          <span v-for="(item,index) in colorInfo" :class="item.name" :data-toggle="'tooltip' + index" data-placement="bottom" :title="item.detail">
+            <!-- <div class="pop-box">
+              <p>{{item.detail}}</p>
+            </div> -->
+          </span>
+        </p>
       </div>
       <div class="goals-list-box">
         <ul ref="goals_list_el">
@@ -15,7 +22,6 @@
               <span class="iconfont icon-select" v-if="!item.is_achieve" @click="changeGoalStatus(1,item)"></span>
               <span class="iconfont icon-select" v-else @click="changeGoalStatus(0,item)">&#xe63d;</span>
               <a @click="popGoalDetailModal(item)">{{item.goal_title}}</a>
-
             </p>
             <i class="iconfont icon-delete" @click="deleteGoal(item)">&#xe6dc;</i>
           </li>
@@ -64,11 +70,12 @@
                   class="item-content" 
                   @click="popGoalDetailModal(l_item)"
                   :style="'width:' + getItemWidth(l_item) + 'px'">
-                    <p>{{new Date(l_item.start_time).getMonth() + 1}}月{{new Date(l_item.start_time).getDate()}}日 —— {{new Date(l_item.end_time).getMonth() + 1}}月{{new Date(l_item.end_time).getDate()}}日</p>
+                    <p>{{new Date(l_item.start_time).getMonth() + 1}}月{{new Date(l_item.start_time).getDate()}}日 —— {{new Date(l_item.end_time).getMonth() + 1}}月{{new Date(l_item.end_time).getDate()}}日<span class="un-achieve">（未完成）</span></p>
                   </span>
                   <span 
                   class="item-overtime-content" 
                   v-if="l_item.is_achieve"
+                  @click="popGoalDetailModal(l_item)"
                   :style="'left:' + getOverItemPosition(l_item) + ';width:' + getOverItemWidth(l_item) + 'px'">
                     <p v-if="checkTimeOut(l_item.achieve_time,l_item.start_time)">提前完成</p>
                     <p v-if="checkTimeOut(l_item.end_time,l_item.achieve_time)">超时完成</p>
@@ -121,7 +128,23 @@
         'month': new Date().getMonth()+1,
         'days': new Date().getDate(),
         'timer': null,
-
+        'colorInfo': [
+          {
+            'name': 'red',
+            'color': '#c75151',
+            'detail': "已超时（无论完成与否）"
+          },
+          {
+            'name': 'green',
+            'color': '#5cb85c',
+            'detail': "已完成（无论超时与否）"
+          },
+          {
+            'name': 'blue',
+            'color': '#468bc7',
+            'detail': "在期限内或提前完成"
+          }
+        ]
       }
     },
     watch: {
@@ -145,6 +168,10 @@
         }, false)
         calendar_y_el.style.width = head_el.clientWidth + 'px'
         calendar_x_el.scrollBy(_this.getTodayPosition(),0)
+
+        for(let i = 0;i < _this.colorInfo.length;i++){
+          $('[data-toggle="tooltip'+i+'"]').tooltip()
+        }
       })
     },
     methods: {
@@ -169,12 +196,12 @@
         this.$refs['goal_list_li_el_' + index][0].style.background = "transparent"
       },
       getDaysOfMonth: function(month){
-        return this.GetDaysOfMonth(this.year,month) //month = 0,1,2...
+        return this.datetime.GetDaysOfMonth(this.year,month) //month = 0,1,2...
       },
       getTodayPosition: function(){
         var s_time = new Date(new Date().getFullYear(),0,1)
         var now = new Date()
-        var diff = this.DateDiff(s_time,now)
+        var diff = this.datetime.DateDiff(s_time,now)
         return diff * 40
       },
       getItemTop: function(index){
@@ -192,11 +219,11 @@
         var s_time = new Date(item.start_time)
         var e_time = new Date(item.end_time)
         if(e_time.getFullYear() == s_time.getFullYear() && this.year == e_time.getFullYear()){
-          var diff = this.DateDiff(s_time,e_time) + 1
+          var diff = this.datetime.DateDiff(s_time,e_time) + 1
           var s_month = new Date(s_time).getMonth()
           var e_month = new Date(e_time).getMonth()
           var m_diff = e_month - s_month
-          return  40 * (diff + m_diff) + -10
+          return  40 * (diff + m_diff) -10
         }
         else{
           if(e_time.getFullYear() == s_time.getFullYear()){
@@ -204,20 +231,20 @@
           }
           else if(s_time.getFullYear() == this.year){ // 当前视窗处在目标最前一段
             var y_e_time = new Date(this.year,11,31)
-            var diff = this.DateDiff(s_time,y_e_time)
+            var diff = this.datetime.DateDiff(s_time,y_e_time)
             var s_month = new Date(s_time).getMonth()
             var m_diff = 12 - s_month + 1
-            return 40 * (diff + m_diff) + -10
+            return 40 * (diff + m_diff) -10
           }
           else if(e_time.getFullYear() == this.year){// 当前视窗处在目标最后一段
             var y_s_time = new Date(this.year,0,1)
-            var diff = this.DateDiff(y_s_time,e_time) + 1
+            var diff = this.datetime.DateDiff(y_s_time,e_time) + 1
             var e_month = new Date(e_time).getMonth()
             var m_diff = e_month - 0 + 1
-            return 40 * (diff + m_diff) + -10
+            return 40 * (diff + m_diff) -10
           }
           else if(this.year > s_time.getFullYear() && this.year < e_time.getFullYear()){
-            return 40 * (365 + 12) + -10
+            return 40 * (365 + 12) -10
           }
           else return 0
         }
@@ -227,51 +254,78 @@
         var s_time = new Date(item.start_time)
         var e_time = new Date(item.end_time)
         var a_time = new Date(item.achieve_time)
-        if(this.DateDiff(e_time,a_time) >= 0){
+        // console.log(" —————————————————超时完成板块宽度——--————————————")
+        // console.log(item.goal_title)
+        // 实现时间晚于结束时间
+        if(this.datetime.DateDiff(e_time,a_time) >= 0){
           if(a_time.getFullYear() == e_time.getFullYear() && this.year == e_time.getFullYear()){
-            var diff = this.DateDiff(e_time,a_time)
+            var diff = this.datetime.DateDiff(e_time,a_time)
             var e_month = new Date(e_time).getMonth()
             var a_month = new Date(a_time).getMonth()
             var m_diff = a_month - e_month
+            // console.log("实现时间与结束时间同年较晚且今年是结束时间：" + 40 * (diff + m_diff))
             return 40 * (diff + m_diff)
           }
           else{
             if(a_time.getFullYear() == e_time.getFullYear()){
+            // console.log("实现时间与结束时间同年较晚且今年不是结束时间：0")
               return 0
             }
             else if(this.year == a_time.getFullYear()){
               var y_s_time = new Date(this.year,0,1)
-              var diff = this.DateDiff(y_s_time,a_time)
+              var diff = this.datetime.DateDiff(y_s_time,a_time)
               var a_month = new Date(a_time).getMonth()
               var m_diff = a_month + 1
-              return 40 * (diff + m_diff) + 35;
+              // console.log("实现时间与结束时间不同年较晚且今年是实现时间：" + 40 * (diff + m_diff) + 30)
+              return 40 * (diff + m_diff) + 30;
             } 
+            else if(this.year < a_time.getFullYear() && this.year >= s_time.getFullYear()){
+              // console.log("实现时间与结束时间不同年较晚且今年与实现时间不同年较早且")
+              if(e_time.getFullYear() == this.year){
+                var y_e_time = new Date(this.year,11,31)
+                var diff = this.datetime.DateDiff(e_time,y_e_time)
+                var e_month = new Date(e_time).getMonth()
+                var m_diff = 12 - e_month + 1
+                // console.log("今年是结束时间：" + 40 * (diff + m_diff) - 10)
+                return 40 * (diff + m_diff) - 10
+              }
+              else{
+                // console.log("今年不是结束时间：" + 40 * (365 + 12) - 10)
+                return 40 * (365 + 12) - 10
+              } 
+            }
             else{
-              return 40 * (365 + 12) + -10
+              // console.log("实现时间与结束时间不同年较晚且今年与实现时间不同年较晚：0")
+              return 0
             }
           }
         }
-        else if(this.DateDiff(s_time,a_time) < 0){
+        // 实现时间早于开始时间
+        else if(this.datetime.DateDiff(s_time,a_time) < 0){
           if(a_time.getFullYear() == s_time.getFullYear() && this.year == s_time.getFullYear()){
-            var diff = this.DateDiff(a_time,s_time) + 1
+            var diff = this.datetime.DateDiff(a_time,s_time) + 1
             var s_month = new Date(s_time).getMonth()
             var a_month = new Date(a_time).getMonth()
             var m_diff = s_month - a_month
+            // console.log("实现时间与开始时间同年较早且今年是开始时间：" + 40 * (diff + m_diff))
             return  40 * (diff + m_diff)
           }
           else{
             if(a_time.getFullYear() == s_time.getFullYear()){
+              // console.log("实现时间与开始时间同年较早且今年不是开始时间：0")
               return 0
             }
             else if(this.year == a_time.getFullYear()){
               var y_e_time = new Date(this.year,11,31)
-              var diff = this.DateDiff(a_time,y_e_time)
+              var diff = this.datetime.DateDiff(a_time,y_e_time)
               var a_month = new Date(a_month).getMonth()
               var m_diff =  11 - a_month
-              return 40 * (diff + m_diff) + -5;
+              // console.log("实现时间与开始时间不同年较早且今年是实现时间：" + 40 * (diff + m_diff) -5)
+              return 40 * (diff + m_diff) -5;
             }
             else{
-              return 40 * (365 + 12) + -10
+              // console.log("实现时间与开始时间不同年较早且今年不是实现时间：" + 40 * (365 + 12) -10)
+              return 40 * (365 + 12) -10
             }
           }
         }
@@ -283,8 +337,8 @@
         var e_time = new Date(item.end_time)
         if(e_time.getFullYear() == s_time.getFullYear() && this.year == s_time.getFullYear()){
           var month = s_time.getMonth() + 1
-          var diff = this.DateDiff(y_s_time,s_time)
-          console.log(item.goal_title + ':' + diff)
+          var diff = this.datetime.DateDiff(y_s_time,s_time)
+          // console.log(item.goal_title + ':' + diff)
           return 40 * (diff + month) + 31 + 'px'
         }
         else{
@@ -295,12 +349,12 @@
         var s_time = new Date(item.start_time)
         var e_time = new Date(item.end_time)
         var a_time = new Date(item.achieve_time)
-        if(this.DateDiff(s_time,a_time) < 0){
+        if(this.datetime.DateDiff(s_time,a_time) < 0){
           return -(this.getOverItemWidth(item)) + 5 + 'px'
         }
         else {
-          if(this.DateDiff(e_time,a_time) < 0){
-            var diff = this.DateDiff(s_time,a_time)
+          if(this.datetime.DateDiff(e_time,a_time) < 0){
+            var diff = this.datetime.DateDiff(s_time,a_time)
             return diff * 40 + 5 + 'px'
           }
           else {
@@ -319,7 +373,7 @@
       checkTimeOut: function(time,c_time){
         var _c_time = new Date(c_time)
         var _time = new Date(time)
-        var diff = this.DateDiff(_time,_c_time)
+        var diff = this.datetime.DateDiff(_time,_c_time)
         return (diff >= 0) ? true : false
       },
       checkToday: function(_month,_days){
@@ -378,7 +432,7 @@
     components: {
       GoalPop
     }
-  }
+  };
 </script>
 
 <style>
@@ -414,6 +468,54 @@
   #calendar .sidebar-nav .head .glyphicon{
     margin-right: 5px;
   }
+  #calendar .sidebar-nav .head .color-info-panel{
+    display: inline-block;
+    vertical-align: middle;
+    height: 60px;
+    line-height: 60px;    
+    font-size: 0px;
+    float: right;
+  }
+  #calendar .sidebar-nav .head .color-info-panel span{
+    display: inline-block;
+    vertical-align: middle;
+    height: 8px;
+    width: 8px;
+    margin: 0 4px;
+    cursor: pointer;
+    border-radius: 10px;
+    position: relative;
+  }
+  #calendar .sidebar-nav .head .color-info-panel span.red{
+    background-color: #c75151;
+  }
+  #calendar .sidebar-nav .head .color-info-panel span.green{
+    background-color: #5cb85c;
+  }
+  #calendar .sidebar-nav .head .color-info-panel span.blue{
+    background-color: #468bc7;
+  }
+  #calendar .sidebar-nav .head .color-info-panel span div.pop-box{
+    position: absolute;
+    line-height: 28px;
+    width: 65px;
+    padding: 0 4px;
+    bottom: -40px;
+    left: -40px;
+    color: #fff;
+    background-color: #444;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 999;
+    display: none
+  }
+  #calendar .sidebar-nav .head .color-info-panel span div.pop-box p{
+    text-align: center;
+  }
+  #calendar .sidebar-nav .head .color-info-panel span:hover > div.pop-box{
+    display: inline-block;
+  }
+
   #calendar .sidebar-nav .goals-list-box{
     height: calc(100% - 60px);
   }
@@ -592,6 +694,9 @@
     cursor: pointer;
     position: absolute;
     height: 20px;
+  }
+  #calendar .calendar-box .wrap-x .wrap-y .item-container .mask-panel .item-wrap.achieve .un-achieve{
+    display: none
   }
   #calendar .calendar-box .wrap-x .wrap-y .item-container .mask-panel .item-wrap.overtime .item-content{
     background-color: #c75151;

@@ -21,10 +21,10 @@
           <div class="modal-panel" v-if="checkError">
             <p class="error-font">{{errorInfo.error}}</p>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-            <button type="button" class="btn btn-primary" @click="addNewNotebook()">提交</button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" @click="addNewNotebook()">提交</button>
         </div>
       </div>
     </div>
@@ -83,10 +83,10 @@
           this.errorInfo.type = "title"
         }
         else{
-          this.newNotebookObj.notebookbook = this.notebookbook
           this.$store.dispatch('notebook/AddNewNotebook',this.newNotebookObj).then((res) => {
-            // console.log(res.data)
-            this.$emit('handleNewNotebook')
+            console.log("新增笔记本")
+            console.log(res.data)
+            this.$emit('handleNewNotebook',res.data.data)
             this.newNotebookObj = {
               'notebook_title': '',
               'notebook_detail': ''
@@ -100,7 +100,7 @@
     components: {
       'tagsSelector' : TagsSelector
     }
-  }
+  };
 </script>
 
 <style>
@@ -140,7 +140,7 @@
     width: 60%;
     text-indent: 10px;
     font-size: 13px;
-    color: #888;
+    color: #555;
   }
   #new_notebook_pop .modal-body .modal-panel .input-content input.error{
     border-color: #d9534f;
@@ -150,14 +150,14 @@
     width: calc(100% - 100px);
     vertical-align: top;
   }
-  #new_notebook_pop .modal-body .modal-panel .area-content textarea{
+/*  #new_notebook_pop .modal-body .modal-panel .area-content textarea{
     border: 1px solid #ddd;
     border-radius: 2px;
     box-shadow: none;
-    color: #888;
+    color: #555;
     font-size: 13px;
     resize: none;
-  }
+  }*/
   #new_notebook_pop .modal-body .modal-panel .error-font{
     font-size: 12px;
     color: #d9534f;

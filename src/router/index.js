@@ -2,13 +2,6 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import store from '@/store'
 import cookie from 'vue-cookie'
-import Login from '@/page/login'
-import Home from '@/page/home'
-import Life from '@/page/life'
-import Note from '@/page/note'
-import Document from '@/page/document'
-import Friends from '@/page/friends'
-
 Vue.use(Router)
 
 const router = new Router({
@@ -16,16 +9,19 @@ const router = new Router({
   routes: [
     {
       path: '',
-      component: Login
+      // component: Login,
+      component: resolve => require(['@/page/login'],resolve)
     },
     {
       path: '/',
-      component: Login
+      // component: Login
+      component: resolve => require(['@/page/login'],resolve)
     },
     {
       path: '/home',
       name: 'Home',
-      component: Home,
+      // component: Home,
+      component: resolve => require(['@/page/home'],resolve),
       meta: {
         login_require: true
       }
@@ -33,7 +29,8 @@ const router = new Router({
     {
       path: '/life',
       name: 'Life',
-      component: Life,
+      // component: Life,
+      component: resolve => require(['@/page/life'],resolve),
       meta: {
         login_require: true
       }
@@ -41,7 +38,8 @@ const router = new Router({
     {
       path: '/note',
       name: 'Note',
-      component: Note,
+      // component: Note,
+      component: resolve => require(['@/page/note'],resolve),
       meta: {
         login_require: true
       }
@@ -49,7 +47,8 @@ const router = new Router({
     {
       path: '/document',
       name: 'Document',
-      component: Document,
+      // component: Document,
+      component: resolve => require(['@/page/document'],resolve),
       meta: {
         login_require: true
       }
@@ -57,7 +56,8 @@ const router = new Router({
     {
       path: '/friends',
       name: 'Friends',
-      component: Friends,
+      // component: Friends,
+      component: resolve => require(['@/page/friends'],resolve),
       meta: {
         login_require: true
       }
@@ -65,7 +65,8 @@ const router = new Router({
     {
       path: '/login',
       name: 'Login',
-      component:Login,
+      // component:Login,
+      component: resolve => require(['@/page/login'],resolve),
       meta: {
         login_require: false
       }
@@ -74,6 +75,7 @@ const router = new Router({
   linkActiveClass: 'active',
   mode: 'history',
   history: true,
+  base:'/mhomestead/',
   scrollBehavior (to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition
@@ -95,6 +97,16 @@ router.beforeEach(function(to,from,next){
     if(cookie.get('token')){
       // if(!store.state.isEdit){
       if(true){
+        store.dispatch('user/GetUserInfo').then((res) => {
+          console.log("用户信息：")
+          console.log(res.data.data)
+          if(store.getters['webSocket/ws'] == ''){
+            store.dispatch('webSocket/InitWebSocket',store.getters['user/userInfo'].user_id)
+          }
+        }).catch((e) => {
+          console.log(e)
+        })
+        
         next()
       }
       else {

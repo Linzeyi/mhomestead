@@ -16,6 +16,12 @@ export function getUserNotes() {
     method: 'post'
   })
 }
+export function getShareNotes() {
+  return interceptor({
+    url: 'note/getShareNotes',
+    method: 'post'
+  })
+}
 export function getCollectedNotes() {
   return interceptor({
     url: 'note/getCollectedNotes',
@@ -28,6 +34,15 @@ export function getNoteById(note_id) {
     method: 'post',
     params: {
       note_id
+    }
+  })
+}
+export function getNotesByTagName(tags_name){
+  return interceptor({
+    url: 'note/getNotesByTagName',
+    method: 'post',
+    params: {
+      tags_name
     }
   })
 }

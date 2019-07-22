@@ -2,43 +2,51 @@
   <div id="noteContext">
     <div class="context-wrap">
       <div class="option-nav">
-        <div class="nav-content">
-          <div class="top-box">
-            <p class="tags-wrap">
-              <i class="iconfont icon-tags">&#xe660;</i>
-              <i 
-              class="iconfont icon-arrow icon-arrow-left" 
-              @click="prevPageTag()"
-              v-if="checkPrevTagPage">&#xe64a;</i>
-              <span class="tag" v-for="(item,index) in pageTags" :style="{backgroundColor: item.tags_color}">{{item.tags_name}}<i class="iconfont icon-delete" @click="deleteTag(item)">&#xe6f6;</i></span>
-              <span class="add-tag">
-                <i class="iconfont icon-add" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @click="popNewTag">&#xe64d;</i>
-                <ul class="dropdown-menu" v-if="isNewTagPop">
-                  <div class="pop-li" data-stopPropagation="true">
-                    <input :class="{'error': error != ''}" type="text" placeholder="新标签名" v-model="newTag.tags_name">
-                  </div>
-                  <div class="pop-li" data-stopPropagation="true">
-                    <input class="color-ipt" type="text" v-model="newTag.tags_color">
-                    <colorPicker v-model="newTag.tags_color" />
-                  </div>
-                  <div class="pop-li error-li" v-if="error != ''" data-stopPropagation="true">
-                    {{error}}
-                  </div>
-                  <div class="pop-li btn-li" data-stopPropagation="true">
-                    <button @click="cancelTagPop">取消</button>
-                    <button class="add-btn" @click.stop="addNewTag">添加</button>
-                  </div>
-                </ul>
-              </span>
-              <i 
-              class="iconfont icon-arrow icon-arrow-right"
-              @click="nextPageTag()"
-              v-if="checkNextTagPage">&#xe642;</i>
-            </p>
+        <div class="row">
+          <div class="col-md-8">
+            <div class="nav-content">
+              <div class="top-box">
+                <p class="tags-wrap">
+                  <i class="iconfont icon-tags">&#xe660;</i>
+                  <i 
+                  class="iconfont icon-arrow icon-arrow-left" 
+                  @click="prevPageTag()"
+                  v-if="checkPrevTagPage">&#xe64a;</i>
+                  <span class="default-font" v-if="tags.length == 0">暂无标签...</span>
+                  <span class="tag" v-for="(item,index) in pageTags" :style="{backgroundColor: item.tags_color}">{{item.tags_name}}<i class="iconfont icon-delete" @click="deleteTag(item)">&#xe6f6;</i></span>
+                  <span class="add-tag">
+                    <i class="iconfont icon-add" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" @click="popNewTag">&#xe64d;</i>
+                    <ul class="dropdown-menu" v-if="isNewTagPop">
+                      <div class="pop-li" data-stopPropagation="true">
+                        <input :class="{'error': error != ''}" type="text" placeholder="新标签名" v-model="newTag.tags_name">
+                      </div>
+                      <div class="pop-li" data-stopPropagation="true">
+                        <input class="color-ipt" type="text" v-model="newTag.tags_color">
+                        <colorPicker v-model="newTag.tags_color" />
+                      </div>
+                      <div class="pop-li error-li" v-if="error != ''" data-stopPropagation="true">
+                        {{error}}
+                      </div>
+                      <div class="pop-li btn-li" data-stopPropagation="true">
+                        <button @click="cancelTagPop">取消</button>
+                        <button class="add-btn" @click.stop="addNewTag">添加</button>
+                      </div>
+                    </ul>
+                  </span>
+                  <i 
+                  class="iconfont icon-arrow icon-arrow-right"
+                  @click="nextPageTag()"
+                  v-if="checkNextTagPage">&#xe642;</i>
+                </p>
+              </div>
+              <div class="bottom-box">
+                <span class="add-time">创建日期：{{currentNote.add_time}}</span>
+                <span class="last-time">修改日期：<font v-if="currentNote.last_time != null">{{currentNote.last_time}}</font><font v-else>{{currentNote.add_time}}</font></span>
+              </div>
+            </div>
           </div>
-          <div class="bottom-box">
-            <span class="add-time">创建日期：{{currentNote.add_time}}</span>
-            <span class="last-time">修改日期：<font v-if="currentNote.last_time != null">{{currentNote.last_time}}</font><font v-else>{{currentNote.add_time}}</font></span>
+          <div class="col-md-4">
+            
           </div>
         </div>
       </div>
@@ -47,7 +55,7 @@
           <input type="text" v-model="noteContentObj.note_title">
         </div>
         <div class="content-detail-box">
-          <textarea v-model="noteContentObj.note_detail" rows="3"  maxlength="100" onchange="this.value=this.value.substring(0, 100)" onkeydown="this.value=this.value.substring(0, 100)" onkeyup="this.value=this.value.substring(0, 100)" ></textarea>
+          <textarea v-model="noteContentObj.note_detail" rows="3" placeholder="请输入笔记的简介内容..."></textarea>
         </div>
         <!-- <div class="content-box" v-for="(item,index) in currentNoteContexts">{{item.note_context_content}}</div> -->
         <quill-editor 
@@ -55,7 +63,8 @@
           v-model="noteContentObj.note_content" 
           ref="myQuillEditor" 
           :options="editorOption" 
-          @blur="onEditorBlur($event)" @focus="onEditorFocus($event)"
+          @blur="onEditorBlur($event)" 
+          @focus="onEditorFocus($event)"
           @change="onEditorChange($event)">
         </quill-editor>
       </div>
@@ -106,9 +115,15 @@
         'editorOption':{
           'modules':{
             'toolbar':[
-              ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-              ['blockquote', 'code-block'],
-              ['image']
+              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+              ['bold', 'italic', 'underline', 'strike','code'], 
+              [{ 'color': [] }, { 'background': [] }],     // 字体颜色，字体背景颜色
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],     //列表
+              [{ 'indent': '-1'}, { 'indent': '+1' }],     // 缩进
+              [{ 'direction': 'rtl' },{ 'align': [] }],   // 文本方向|对齐方式
+              ['blockquote', 'code-block','formula'],
+              ['image'],
+              ['clean']
             ]
           }
         },
@@ -167,7 +182,8 @@
       },
       getNoteTags: function(){
         this.$store.dispatch('tag/GetNoteTags',this.currentNote.note_id).then((res) => {
-          // console.log(res.data)
+          console.log("获取笔记【" + this.currentNote.note_title + "】所携带的标签列表：")
+          console.log(res.data)
           this.tags = res.data.data
           this.tagPageInfo.total = this.tags.length
           this.tagPageInfo.num = parseInt((this.tagPageInfo.total - 1)/this.tagPageInfo.size)
@@ -178,8 +194,11 @@
       },
       deleteTag: function(item){
         this.$store.dispatch('tag/DeleteTag',item.tags_id).then((res) => {
+          console.log("删除标签【" + item.tags_name + "】")
+          console.log(res.data)
           this.$store.dispatch('tag/GetNoteTags',this.currentNote.note_id).then((res) => {
-            // console.log(res.data)
+            console.log("重新获取笔记所携带的标签列表：")
+            console.log(res.data)
             this.tags = res.data.data
             this.tagPageInfo.total = this.tags.length
             this.tagPageInfo.num = parseInt((this.tagPageInfo.total - 1)/this.tagPageInfo.size)
@@ -198,9 +217,11 @@
           this.error = ''
           this.newTag.note = this.currentNote
           this.$store.dispatch('tag/SaveTag',this.newTag).then((res) => {
-            // console.log(res.data)
+            console.log("成功添加新的标签【" + this.newTag.tags_name + "】")
+            console.log(res.data)
             this.$store.dispatch('tag/GetNoteTags',this.currentNote.note_id).then((res) => {
-              // console.log(res.data)
+              console.log("重新获取笔记所携带的标签列表：")
+              console.log(res.data)
               this.tags = res.data.data
               this.tagPageInfo.total = this.tags.length
               this.tagPageInfo.num = parseInt((this.tagPageInfo.total - 1)/this.tagPageInfo.size)
@@ -222,7 +243,8 @@
       saveNote: function(){
         this.$emit("setCurrentNote",this.noteContentObj)
         this.$store.dispatch('note/UpdateNote',this.currentNote).then((res) => {
-          // console.log(res.data.data)
+          console.log("保存编辑后的笔记信息")
+          console.log(res.data)
           this.$emit('changeEditStatus',false)
           this.$emit("setCurrentNote",res.data.data)
           this.$refs.save_note_pop_el.click()
@@ -249,7 +271,6 @@
       },
       checkEditStatus: function(){
         if(!this.checkString(this.noteContentObj.note_title,this.currentNote.note_title)  ||  !this.checkString(this.noteContentObj.note_detail,this.currentNote.note_detail)  ||  !this.checkString(this.noteContentObj.note_content,this.currentNote.note_content)){
-        // if(this.noteContentObj.note_title.split('\t').join('') != this.currentNote.note_title.split('\t').join('') || this.noteContentObj.note_detail.split('\t').join('') != this.currentNote.note_detail.split('\t').join('') || this.noteContentObj.note_content.split('\t').join('') != this.currentNote.note_content.split('\t').join('')){
           this.$emit('changeEditStatus',true)
         }
         else{
@@ -273,20 +294,19 @@
         return s1 == s2
       }
     }
-  }
+  };
+
 </script>
 
 <style>
   #noteContext{
-    position: absolute;
-    left: 300px;
     height: 100%;
-    width: calc(100% - 300px);
+    width: 100%;
+    overflow-y: auto;
     background-color: #fff;
     text-align: left;
   }
   #noteContext .context-wrap{
-    height: 100%;
     width: 100%;
   }
   #noteContext .context-wrap .option-nav{
@@ -294,17 +314,23 @@
     height: 70px;
     width: 100%;
   }
+  #noteContext .context-wrap .option-nav .row{
+    border-bottom: 1px solid #ccc;
+    height: 100%;
+  }
+  #noteContext .context-wrap .option-nav .row div[class^='col-md']{
+    height: 100%;
+  }
   #noteContext .context-wrap .option-nav .nav-content{
     width: 100%;
     height: 100%;
-    border-bottom: 1px solid #ccc;
   }
   #noteContext .context-wrap .option-nav .nav-content .top-box{
     height: 35px;
     line-height: 45px;
   }
-  #noteContext .context-wrap .option-nav .nav-content .top-box .tags-wrap {
-    width: 60%;
+  #noteContext .context-wrap .option-nav .nav-content .top-box .tags-wrap span{
+    font-size: 12px;
   }
   #noteContext .context-wrap .option-nav .nav-content .top-box .tags-wrap .icon-tags{
     font-size: 16px;
@@ -503,7 +529,7 @@
     font-weight: 600;
     color: #666;
     width: 100%;
-    /*border-bottom: 1px solid #ddd;*/
+    text-indent: 5px;
   }
   #noteContext .context-wrap .context-content .content-detail-box{
     padding: 15px 0;
@@ -513,7 +539,7 @@
     width: 80%;
     border: none;
     resize: none;
-    line-height: 25px;
+    line-height: 28px;
     color: #777;
   }
   #noteContext .context-wrap .context-content .content-box{
@@ -533,15 +559,24 @@
   }
   #noteContext .context-wrap .context-content .quill-editor .ql-container.ql-snow .ql-editor{
     padding: 15px 5px;
-    font-size: 14px;
     color: #777;
     line-height: 30px;
+  }
+  #noteContext .context-wrap .context-content .quill-editor .ql-container.ql-snow .ql-editor *{
+    font-size: 13px;
+    line-height: 28px;
+  }
+  #noteContext .context-wrap .context-content .quill-editor .ql-container.ql-snow .ql-editor pre,
+  #noteContext .context-wrap .context-content .quill-editor .ql-container.ql-snow .ql-editor img{
+    margin: 8px 0;
   }
   #noteContext .context-wrap .context-content .quill-editor .ql-container{
     height: calc(100% - 50px);
   }
 
   #noteContext .context-wrap .context-option-wrap {
+    position: relative;
+    z-index: 80;
     height: 60px;
     padding: 12px 20px;
     text-align: right;
@@ -552,9 +587,6 @@
     padding: 6px 18px;
     height: 100%;
   }
-  #noteContext .context-wrap .context-option-wrap button.save-btn{
-    background-color: 
-  }
 
 
   #noteContext #save_note_pop{
@@ -563,6 +595,10 @@
   }
   #noteContext #save_note_pop .modal-sm .modal-footer{
     text-align: center;
+  }
+
+  #noteContext .default-font{
+    color: #999;
   }
 
 </style>

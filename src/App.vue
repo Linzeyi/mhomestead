@@ -15,16 +15,10 @@ export default {
     }
   },
   created: function(){
-    this.init()
   },
   methods: {
-    init: function(){
-      if(!this.$store.getters['user/token'] && cookie.get('token')){  //页面刷新重新设置store仓库的数据
-        this.$store.dispatch('user/initState',{'name':cookie.get('name'),'token':cookie.get('token')})
-      }
-    }
   }
-}
+};
 </script>
 
 <style>
@@ -55,12 +49,16 @@ html,body,#app{
   border-radius: 2px;
   background: #EDEDED;
 }
+
+ol, ul {
+  list-style: none;
+}
 ol, ul, p {
   margin: 0; 
   padding: 0;
 }
 *:focus {
-  outline: 0;
+  outline: 0 !important;
 }
 .shade{
   position: absolute;
@@ -110,13 +108,15 @@ ol, ul, p {
   padding: 0.3em .6em .3em;
 }
 .modal{
-  /*top: 100px; */
   z-index: 100;
 }
 .modal-backdrop{
   z-index: 8;
 }
+.row {
+  margin: 0;
+}
 a:focus{
-    outline: 0;
+  outline: 0;
 }
 </style>
